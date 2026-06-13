@@ -54,8 +54,8 @@ export default function Navbar() {
             {/* Nav desktop */}
             <div className="hidden md:flex items-center gap-6 text-sm">
               <Link to="/" className="text-white hover:text-gray-300 transition-colors">Início</Link>
-              <Link to="/?tipo=serie" className="text-gray-300 hover:text-white transition-colors">Doramas</Link>
-              <Link to="/?tipo=filme" className="text-gray-300 hover:text-white transition-colors">Filmes</Link>
+              <Link to="/?tipo=filme" className="text-gray-300 hover:text-white transition-colors">Filmes Doramas</Link>
+              <Link to="/?tipo=serie" className="text-gray-300 hover:text-white transition-colors">Séries Doramas</Link>
             </div>
           </div>
 
@@ -154,8 +154,8 @@ export default function Navbar() {
       {menuAberto && (
         <div className="md:hidden bg-netflix-dark border-t border-zinc-800 px-4 py-4 space-y-3 animate-slide-up">
           <Link to="/" className="block text-white hover:text-gray-300 py-2">Início</Link>
-          <Link to="/?tipo=serie" className="block text-gray-300 hover:text-white py-2">Doramas</Link>
-          <Link to="/?tipo=filme" className="block text-gray-300 hover:text-white py-2">Filmes</Link>
+          <Link to="/?tipo=filme" className="block text-gray-300 hover:text-white py-2">Filmes Doramas</Link>
+          <Link to="/?tipo=serie" className="block text-gray-300 hover:text-white py-2">Séries Doramas</Link>
           {podeInstalar && !instalado && (
             <button
               onClick={instalar}
