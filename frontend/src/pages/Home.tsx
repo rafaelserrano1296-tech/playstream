@@ -136,8 +136,8 @@ export default function Home() {
       {/* Conteúdo */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 -mt-12 relative z-10">
         <InstallBanner />
-        {lancamentos.length > 0 && <FilmesSlider titulo="Lançamentos" filmes={lancamentos} />}
         {filmes.length > 0 && <FilmesSlider titulo="Filmes" filmes={filmes} />}
+        {lancamentos.length > 0 && <FilmesSlider titulo="Lançamentos" filmes={lancamentos} />}
         {series.length > 0 && <FilmesSlider titulo="Séries" filmes={series} />}
 
         {!destaques.length && !filmes.length && !series.length && !lancamentos.length && (
