@@ -41,9 +41,13 @@ export default function Login() {
       <div className="w-full max-w-md space-y-4">
 
         {/* Botão de Download — bem destacado */}
-        {!instalado ? (
+        {instalado ? (
+          <div className="w-full bg-green-900/30 border border-green-500/30 text-green-400 font-bold py-4 rounded-2xl flex items-center justify-center gap-3">
+            <Check size={20} /> App já instalado no seu dispositivo!
+          </div>
+        ) : podeInstalar ? (
           <button
-            onClick={podeInstalar ? instalar : undefined}
+            onClick={instalar}
             className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-3 text-lg shadow-lg shadow-purple-900/50 transition-all active:scale-95 border border-purple-500/30"
           >
             <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
@@ -56,8 +60,12 @@ export default function Login() {
             <Smartphone size={20} className="ml-auto text-purple-300" />
           </button>
         ) : (
-          <div className="w-full bg-green-900/30 border border-green-500/30 text-green-400 font-bold py-4 rounded-2xl flex items-center justify-center gap-3">
-            <Check size={20} /> App já instalado no seu dispositivo!
+          <div className="w-full bg-zinc-800 border border-zinc-700 text-white py-4 rounded-2xl flex items-center justify-center gap-3 text-sm">
+            <Smartphone size={20} className="text-purple-400" />
+            <div className="text-left">
+              <p className="font-black leading-tight">Instalar App no Celular</p>
+              <p className="text-gray-400 text-xs">Toque nos 3 pontinhos do Chrome → "Adicionar à tela inicial"</p>
+            </div>
           </div>
         )}
 
