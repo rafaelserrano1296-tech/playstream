@@ -29,13 +29,13 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] flex flex-col items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-[#0d0d14] flex flex-col items-center justify-center px-4 py-8" style={{backgroundImage: 'radial-gradient(ellipse at top, #1a0a1e 0%, #0d0d14 70%)'}}>
       {/* Logo */}
       <div className="mb-8 text-center">
-        <h1 className="text-4xl font-black bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
+        <h1 className="text-4xl font-black bg-gradient-to-r from-pink-400 to-rose-500 bg-clip-text text-transparent">
           PLAY STREAM
         </h1>
-        <p className="text-gray-500 text-sm mt-1">Sua plataforma de streaming</p>
+        <p className="text-gray-500 text-sm mt-1">Doramas & Séries Asiáticas</p>
       </div>
 
       <div className="w-full max-w-md space-y-4">

@@ -37,7 +37,7 @@ export default function Cadastro() {
       <div className="absolute inset-0 bg-black/60" />
 
       <div className="relative z-10 w-full max-w-md">
-        <Link to="/" className="block text-netflix-red font-black text-3xl mb-8">STREAMFLIX</Link>
+        <Link to="/" className="block font-black text-3xl mb-8 bg-gradient-to-r from-pink-400 to-rose-500 bg-clip-text text-transparent">PLAY STREAM</Link>
 
         <div className="bg-black/75 backdrop-blur-sm rounded-lg p-8 md:p-10">
           <h1 className="text-3xl font-bold mb-6">Criar Conta</h1>

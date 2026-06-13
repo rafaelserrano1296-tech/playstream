@@ -8,7 +8,7 @@ import FilmesSlider from '../components/ui/FilmesSlider';
 import FilmeCard from '../components/ui/FilmeCard';
 import Loading from '../components/ui/Loading';
 
-const PLACEHOLDER = 'https://via.placeholder.com/1280x720/1a1a1a/555?text=StreamFlix';
+const PLACEHOLDER = 'https://via.placeholder.com/1280x720/1a1a1a/555?text=Play+Stream';
 
 export default function Home() {
   const [searchParams] = useSearchParams();
@@ -136,14 +136,14 @@ export default function Home() {
       {/* Conteúdo */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 -mt-12 relative z-10">
         <InstallBanner />
-        {filmes.length > 0 && <FilmesSlider titulo="Filmes" filmes={filmes} />}
+        {series.length > 0 && <FilmesSlider titulo="Doramas em Destaque" filmes={series} />}
+        {filmes.length > 0 && <FilmesSlider titulo="Filmes Asiáticos" filmes={filmes} />}
         {lancamentos.length > 0 && <FilmesSlider titulo="Lançamentos" filmes={lancamentos} />}
-        {series.length > 0 && <FilmesSlider titulo="Séries" filmes={series} />}
 
         {!destaques.length && !filmes.length && !series.length && !lancamentos.length && (
           <div className="text-center py-24">
-            <p className="text-gray-400 text-lg mb-2">Nenhum conteúdo disponível ainda.</p>
-            <p className="text-gray-600 text-sm">O administrador ainda não adicionou filmes.</p>
+            <p className="text-gray-400 text-lg mb-2">Nenhum dorama disponível ainda.</p>
+            <p className="text-gray-600 text-sm">Em breve novos doramas chegando!</p>
           </div>
         )}
       </div>
