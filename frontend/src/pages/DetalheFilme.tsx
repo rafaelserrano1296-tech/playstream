@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Play, Lock, ArrowLeft, Star, Clock, Calendar, Tag, X, Copy, Check, ExternalLink } from 'lucide-react';
+import { Play, Lock, ArrowLeft, Star, Clock, Calendar, Tag, X, Copy, Check } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import toast from 'react-hot-toast';
 import { Filme, PagamentoPix } from '../types';
@@ -23,7 +23,7 @@ export default function DetalheFilme() {
   const [loadingPix, setLoadingPix] = useState(false);
   const [copiado, setCopiado] = useState(false);
   const [verificando, setVerificando] = useState(false);
-  const [avisoExterno, setAvisoExterno] = useState(false);
+  const [playerAberto, setPlayerAberto] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -51,7 +51,7 @@ export default function DetalheFilme() {
     if (!filme) return;
 
     if (acesso?.acesso) {
-      setAvisoExterno(true);
+      setPlayerAberto(true);
       return;
     }
 
@@ -61,16 +61,24 @@ export default function DetalheFilme() {
       return;
     }
 
-    // Abrir modal de pagamento
     setModalAberto(true);
     iniciarPagamento();
   };
 
-  const abrirVideo = () => {
-    if (filme?.url_video) {
-      window.open(filme.url_video, '_blank', 'noopener,noreferrer');
+  const getEmbedUrl = (url: string) => {
+    try {
+      const u = new URL(url);
+      if (u.hostname.includes('youtube.com')) {
+        const v = u.searchParams.get('v');
+        return v ? `https://www.youtube.com/embed/${v}?autoplay=1&rel=0` : url;
+      }
+      if (u.hostname.includes('youtu.be')) {
+        return `https://www.youtube.com/embed${u.pathname}?autoplay=1&rel=0`;
+      }
+      return url;
+    } catch {
+      return url;
     }
-    setAvisoExterno(false);
   };
 
   const iniciarPagamento = async () => {
@@ -214,23 +222,29 @@ export default function DetalheFilme() {
         </div>
       </div>
 
-      {/* Modal aviso externo */}
-      {avisoExterno && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 max-w-md w-full animate-scale-in text-center">
-            <ExternalLink size={40} className="text-netflix-red mx-auto mb-4" />
-            <h3 className="text-xl font-bold mb-2">Abrindo Conteúdo Externo</h3>
-            <p className="text-gray-400 mb-6 text-sm">
-              Este conteúdo será aberto em uma nova aba em uma plataforma externa (YouTube ou similar).
-            </p>
-            <div className="flex gap-3">
-              <button onClick={() => setAvisoExterno(false)} className="flex-1 btn-secondary py-3">
-                Cancelar
+      {/* Player embutido */}
+      {playerAberto && filme?.url_video && (
+        <div className="fixed inset-0 bg-black z-50 flex flex-col">
+          <div className="flex items-center justify-between px-4 py-3 bg-zinc-900 border-b border-zinc-800">
+            <div className="flex items-center gap-3">
+              <button onClick={() => setPlayerAberto(false)} className="text-gray-400 hover:text-white">
+                <ArrowLeft size={22} />
               </button>
-              <button onClick={abrirVideo} className="flex-1 btn-primary py-3 flex items-center justify-center gap-2">
-                <ExternalLink size={16} /> Continuar
-              </button>
+              <p className="font-bold text-sm truncate max-w-[200px] md:max-w-none">{filme.titulo}</p>
             </div>
+            <button onClick={() => setPlayerAberto(false)} className="text-gray-400 hover:text-white">
+              <X size={22} />
+            </button>
+          </div>
+          <div className="flex-1 bg-black flex items-center justify-center">
+            <iframe
+              src={getEmbedUrl(filme.url_video)}
+              className="w-full h-full"
+              style={{ aspectRatio: '16/9', maxHeight: '100%' }}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+              allowFullScreen
+              title={filme.titulo}
+            />
           </div>
         </div>
       )}
