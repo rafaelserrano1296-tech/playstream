@@ -56,7 +56,6 @@ export default function Navbar() {
               <Link to="/" className="text-white hover:text-gray-300 transition-colors">Início</Link>
               <Link to="/?tipo=serie" className="text-gray-300 hover:text-white transition-colors">Séries</Link>
               <Link to="/?tipo=filme" className="text-gray-300 hover:text-white transition-colors">Filmes</Link>
-              <Link to="/?lancamento=true" className="text-gray-300 hover:text-white transition-colors">Lançamentos</Link>
             </div>
           </div>
 
@@ -157,7 +156,6 @@ export default function Navbar() {
           <Link to="/" className="block text-white hover:text-gray-300 py-2">Início</Link>
           <Link to="/?tipo=serie" className="block text-gray-300 hover:text-white py-2">Séries</Link>
           <Link to="/?tipo=filme" className="block text-gray-300 hover:text-white py-2">Filmes</Link>
-          <Link to="/?lancamento=true" className="block text-gray-300 hover:text-white py-2">Lançamentos</Link>
           {podeInstalar && !instalado && (
             <button
               onClick={instalar}

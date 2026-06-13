@@ -75,6 +75,11 @@ export default function DetalheFilme() {
       if (u.hostname.includes('youtu.be')) {
         return `https://www.youtube.com/embed${u.pathname}?autoplay=1&rel=0`;
       }
+      if (u.hostname.includes('dailymotion.com')) {
+        const parts = u.pathname.split('/');
+        const videoId = parts[parts.length - 1].split('_')[0];
+        return `https://www.dailymotion.com/embed/video/${videoId}?autoplay=1`;
+      }
       return url;
     } catch {
       return url;
