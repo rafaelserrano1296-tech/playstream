@@ -6,7 +6,7 @@ const axios = require('axios');
 const ABACATEPAY_URL = 'https://api.abacatepay.com/v2';
 const ABACATEPAY_KEY = process.env.ABACATEPAY_KEY;
 
-// Criar cobrança PIX de assinatura
+// Criar link de pagamento AbacatePay
 router.post('/iniciar', autenticar, async (req, res) => {
   try {
     const usuarioId = req.usuario.id;
@@ -21,16 +21,21 @@ router.post('/iniciar', autenticar, async (req, res) => {
       return res.json({ assinatura_ativa: true, data_fim: ativas[0].data_fim });
     }
 
-    // Criar cobrança no AbacatePay
+    // Criar link de pagamento no AbacatePay
     const response = await axios.post(
-      `${ABACATEPAY_URL}/checkouts/create`,
+      `${ABACATEPAY_URL}/billing/create`,
       {
-        items: [{
-          id: 'prod_hnKSXG4SUB1KGCWJyXgbb3tM',
+        frequency: 'ONE_TIME',
+        methods: ['PIX'],
+        products: [{
+          externalId: String(usuarioId),
+          name: 'Assinatura Play Stream Premium',
+          description: 'Acesso completo ao catálogo de doramas por 30 dias',
           quantity: 1,
+          price: 990,
         }],
         returnUrl: `${process.env.FRONTEND_URL}/assinar`,
-        completionUrl: `${process.env.FRONTEND_URL}/assinar`,
+        completionUrl: `${process.env.FRONTEND_URL}/assinar?pago=1`,
         customer: {
           name: usuario.nome,
           email: usuario.email,
@@ -51,24 +56,23 @@ router.post('/iniciar', autenticar, async (req, res) => {
 
     const billing = response.data.data || response.data;
     const txid = billing.id || billing._id;
-    const pixCopiaECola = billing.brCode || billing.pixCode || billing.url || '';
+    const url = billing.url || billing.checkoutUrl || '';
 
     // Salvar no banco
     await pool.query(
       `INSERT INTO assinaturas (usuario_id, txid, pix_copia_cola, status, valor)
        VALUES ($1, $2, $3, 'pendente', 9.90)`,
-      [usuarioId, txid, pixCopiaECola]
+      [usuarioId, txid, url]
     );
 
     res.json({
       txid,
-      pix_copia_cola: pixCopiaECola,
-      url: billing.url,
+      url,
       valor: 9.90,
     });
   } catch (err) {
     console.error('Erro AbacatePay:', err.response?.data || err.message);
-    res.status(500).json({ error: 'Erro ao gerar cobrança PIX' });
+    res.status(500).json({ error: 'Erro ao gerar link de pagamento' });
   }
 });
 
@@ -94,9 +98,9 @@ router.post('/webhook', async (req, res) => {
     const event = req.body;
     console.log('Webhook AbacatePay:', JSON.stringify(event));
 
-    if (event.event === 'transparent.completed' || event.event === 'billing.paid' || event.status === 'PAID') {
-      const txid = event.data?.id || event.id;
-      const usuarioId = event.data?.metadata?.usuario_id || event.metadata?.usuario_id;
+    if (event.event === 'billing.paid' || event.event === 'transparent.completed' || event.status === 'PAID') {
+      const txid = event.data?.id || event.data?.billing?.id || event.id;
+      const usuarioId = event.data?.metadata?.usuario_id || event.data?.billing?.metadata?.usuario_id || event.metadata?.usuario_id;
 
       if (!txid) return res.json({ ok: true });
 

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Lock, Check, Copy, Star, Tv, Zap } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Lock, Check, Star, Tv, Zap, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { assinaturasAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,11 +8,11 @@ import { useAuth } from '../contexts/AuthContext';
 export default function Assinatura() {
   const { autenticado } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
-  const [pix, setPix] = useState<{ txid: string; pix_copia_cola: string; url?: string } | null>(null);
-  const [copiado, setCopiado] = useState(false);
   const [assinaturaAtiva, setAssinaturaAtiva] = useState(false);
   const [dataFim, setDataFim] = useState<string | null>(null);
+  const pagou = searchParams.get('pago') === '1';
 
   useEffect(() => {
     if (!autenticado) { navigate('/login'); return; }
@@ -34,20 +33,16 @@ export default function Assinatura() {
         setDataFim(res.data.data_fim);
         return;
       }
-      setPix(res.data);
+      if (res.data.url) {
+        window.location.href = res.data.url;
+      } else {
+        toast.error('Link de pagamento não disponível');
+      }
     } catch (err: any) {
-      toast.error(err.response?.data?.error || 'Erro ao gerar PIX');
+      toast.error(err.response?.data?.error || 'Erro ao gerar link de pagamento');
     } finally {
       setLoading(false);
     }
-  };
-
-  const copiar = async () => {
-    if (!pix?.pix_copia_cola) return;
-    await navigator.clipboard.writeText(pix.pix_copia_cola);
-    setCopiado(true);
-    toast.success('Código PIX copiado!');
-    setTimeout(() => setCopiado(false), 3000);
   };
 
   return (
@@ -70,7 +65,21 @@ export default function Assinatura() {
               Ir para o Catálogo
             </button>
           </div>
-        ) : !pix ? (
+        ) : pagou ? (
+          <div className="text-center py-16">
+            <div className="w-20 h-20 bg-yellow-500/20 border-2 border-yellow-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Zap size={40} className="text-yellow-400" />
+            </div>
+            <h1 className="text-2xl font-black text-white mb-2">Pagamento recebido!</h1>
+            <p className="text-gray-400 mb-6">Seu acesso será liberado em instantes após a confirmação do PIX.</p>
+            <button onClick={() => window.location.reload()} className="w-full bg-gradient-to-r from-pink-600 to-rose-600 text-white font-black py-3 rounded-xl mb-3">
+              Verificar acesso
+            </button>
+            <button onClick={() => navigate('/')} className="w-full text-gray-400 py-3 text-sm">
+              Ir para o catálogo
+            </button>
+          </div>
+        ) : (
           <>
             {/* Header */}
             <div className="text-center mb-8">
@@ -111,54 +120,20 @@ export default function Assinatura() {
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
                     <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Gerando PIX...
+                    Aguarde...
                   </span>
-                ) : 'Assinar por R$9,90/mês'}
+                ) : (
+                  <span className="flex items-center justify-center gap-2">
+                    <ExternalLink size={18} />
+                    Assinar por R$9,90/mês
+                  </span>
+                )}
               </button>
             </div>
 
             <p className="text-center text-xs text-gray-600">
               Pagamento via PIX • Acesso liberado automaticamente após confirmação
             </p>
-          </>
-        ) : (
-          <>
-            {/* QR Code PIX */}
-            <div className="text-center mb-6">
-              <h1 className="text-2xl font-black text-white mb-1">Pague com PIX</h1>
-              <p className="text-gray-400 text-sm">Escaneie o QR Code ou copie o código</p>
-            </div>
-
-            <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6">
-              <div className="text-center mb-4">
-                <p className="text-3xl font-black text-white">R$ 9,90</p>
-                <p className="text-gray-500 text-sm">Assinatura mensal — 30 dias de acesso</p>
-              </div>
-
-              <div className="flex justify-center mb-4">
-                <div className="bg-white p-4 rounded-xl">
-                  <QRCodeSVG value={pix.pix_copia_cola} size={200} />
-                </div>
-              </div>
-
-              <p className="text-center text-xs text-gray-400 mb-4">
-                Abra o app do banco → PIX → Escanear QR Code
-              </p>
-
-              <div className="bg-zinc-800 rounded-xl p-3 mb-4">
-                <p className="text-xs text-gray-400 mb-2">PIX Copia e Cola:</p>
-                <div className="flex items-center gap-2">
-                  <p className="text-xs text-gray-300 break-all flex-1 line-clamp-2">{pix.pix_copia_cola}</p>
-                  <button onClick={copiar} className={`flex-shrink-0 p-2 rounded transition-colors ${copiado ? 'text-green-400' : 'text-gray-400 hover:text-white'}`}>
-                    {copiado ? <Check size={16} /> : <Copy size={16} />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="bg-green-900/20 border border-green-500/30 rounded-xl p-3 text-center">
-                <p className="text-green-400 text-sm font-semibold">✓ Acesso liberado automaticamente após o pagamento</p>
-              </div>
-            </div>
           </>
         )}
       </div>
