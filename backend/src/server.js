@@ -8,6 +8,7 @@ const filmesRoutes = require('./routes/filmes');
 const pagamentosRoutes = require('./routes/pagamentos');
 const adminRoutes = require('./routes/admin');
 const usuariosRoutes = require('./routes/usuarios');
+const assinaturasRoutes = require('./routes/assinaturas');
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use('/api/filmes', filmesRoutes);
 app.use('/api/pagamentos', pagamentosRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/usuarios', usuariosRoutes);
+app.use('/api/assinaturas', assinaturasRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

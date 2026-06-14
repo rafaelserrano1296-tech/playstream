@@ -40,7 +40,14 @@ const buscarFilme = async (req, res) => {
     [id]
   );
   if (!rows[0]) return res.status(404).json({ error: 'Filme não encontrado' });
-  res.json(rows[0]);
+
+  const { rows: episodios } = await pool.query(
+    `SELECT id, titulo, numero, url_video, duracao
+     FROM episodios WHERE filme_id = $1 ORDER BY numero ASC`,
+    [id]
+  );
+
+  res.json({ ...rows[0], episodios });
 };
 
 const verificarAcesso = async (req, res) => {
@@ -53,13 +60,14 @@ const verificarAcesso = async (req, res) => {
   if (filme.gratuito) return res.json({ acesso: true, motivo: 'gratuito' });
   if (!usuarioId) return res.json({ acesso: false, motivo: 'login_necessario' });
 
-  const { rows: [compra] } = await pool.query(
-    `SELECT id FROM compras WHERE usuario_id = $1 AND filme_id = $2 AND status_pagamento = 'aprovado'`,
-    [usuarioId, id]
+  // Verificar assinatura ativa
+  const { rows: [assinatura] } = await pool.query(
+    `SELECT id FROM assinaturas WHERE usuario_id = $1 AND status = 'ativa' AND data_fim > NOW()`,
+    [usuarioId]
   );
+  if (assinatura) return res.json({ acesso: true, motivo: 'assinante' });
 
-  if (compra) return res.json({ acesso: true, motivo: 'comprado' });
-  return res.json({ acesso: false, motivo: 'pagamento_necessario' });
+  return res.json({ acesso: false, motivo: 'assinatura_necessaria' });
 };
 
 const listarCategorias = async (req, res) => {
