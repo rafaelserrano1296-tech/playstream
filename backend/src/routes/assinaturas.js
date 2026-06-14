@@ -111,18 +111,28 @@ router.post('/webhook', async (req, res) => {
 
       if (p.status === 'approved') {
         const usuarioId = p.metadata?.usuario_id;
-        const txid = p.preference_id;
+        const preferenceId = p.preference_id;
 
-        if (!txid) return res.json({ ok: true });
+        console.log('Ativando assinatura - usuarioId:', usuarioId, 'preferenceId:', preferenceId);
 
         const dataInicio = new Date();
         const dataFim = new Date();
         dataFim.setDate(dataFim.getDate() + 30);
 
-        await pool.query(
-          `UPDATE assinaturas SET status = 'ativa', data_inicio = $1, data_fim = $2 WHERE txid = $3`,
-          [dataInicio, dataFim, txid]
-        );
+        if (usuarioId) {
+          // Ativa por usuario_id (mais confiável)
+          await pool.query(
+            `UPDATE assinaturas SET status = 'ativa', data_inicio = $1, data_fim = $2
+             WHERE usuario_id = $3 AND status = 'pendente'`,
+            [dataInicio, dataFim, usuarioId]
+          );
+        } else if (preferenceId) {
+          // Fallback por txid
+          await pool.query(
+            `UPDATE assinaturas SET status = 'ativa', data_inicio = $1, data_fim = $2 WHERE txid = $3`,
+            [dataInicio, dataFim, preferenceId]
+          );
+        }
 
         console.log(`Assinatura ativada para usuario ${usuarioId} até ${dataFim}`);
       }
