@@ -62,8 +62,11 @@ export default function FilmeCard({ filme, forcePremium }: Props) {
         </h3>
         <div className="flex items-center justify-between mt-1">
           <span className="text-xs text-gray-400 capitalize">{filme.tipo === 'serie' ? 'Dorama' : 'Filme'}</span>
-          {filme.ano && <span className="text-xs text-gray-500">{filme.ano}</span>}
+            {filme.ano && <span className="text-xs text-gray-500">{filme.ano}</span>}
         </div>
+        {isPremium && (
+          <p className="text-xs text-yellow-400 font-semibold mt-1">🔒 Apenas assinantes</p>
+        )}
       </div>
     </Link>
   );
