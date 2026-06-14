@@ -295,7 +295,7 @@ export default function DetalheFilme() {
       {/* Player embutido */}
       {playerAberto && getVideoUrl() && (
         <div className="fixed inset-0 bg-black z-50 flex flex-col">
-          <div className="flex items-center justify-between px-4 py-3 bg-zinc-900 border-b border-zinc-800">
+          <div className="flex items-center justify-between px-4 py-3 bg-zinc-900/90 border-b border-zinc-800">
             <div className="flex items-center gap-3">
               <button onClick={fecharPlayer} className="text-gray-400 hover:text-white">
                 <ArrowLeft size={22} />
@@ -306,11 +306,11 @@ export default function DetalheFilme() {
               <X size={22} />
             </button>
           </div>
-          <div className="flex-1 bg-black flex items-center justify-center">
+          <div className="flex-1 bg-black">
             <iframe
               src={getVideoUrl()}
               className="w-full h-full"
-              style={{ aspectRatio: '16/9', maxHeight: '100%' }}
+              style={{ display: 'block' }}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
               allowFullScreen
               title={getTituloPlayer()}

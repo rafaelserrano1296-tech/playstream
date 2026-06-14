@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Usuario } from '../types';
-import { authAPI } from '../services/api';
+import { authAPI, assinaturasAPI } from '../services/api';
 
 interface AuthContextData {
   usuario: Usuario | null;
@@ -11,6 +11,8 @@ interface AuthContextData {
   logout: () => void;
   isAdmin: boolean;
   autenticado: boolean;
+  assinaturaAtiva: boolean;
+  diasRestantes: number | null;
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
@@ -19,6 +21,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [assinaturaAtiva, setAssinaturaAtiva] = useState(false);
+  const [diasRestantes, setDiasRestantes] = useState<number | null>(null);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('sf_token');
@@ -29,6 +33,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     setLoading(false);
   }, []);
+
+  useEffect(() => {
+    if (!token) { setAssinaturaAtiva(false); setDiasRestantes(null); return; }
+    assinaturasAPI.status().then((res) => {
+      if (res.data.ativa) {
+        setAssinaturaAtiva(true);
+        const dias = Math.ceil((new Date(res.data.data_fim).getTime() - Date.now()) / 86400000);
+        setDiasRestantes(dias);
+      } else {
+        setAssinaturaAtiva(false);
+        setDiasRestantes(null);
+      }
+    }).catch(() => {});
+  }, [token]);
 
   const salvar = (tok: string, user: Usuario) => {
     setToken(tok);
@@ -60,6 +78,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       login, cadastrar, logout,
       isAdmin: usuario?.role === 'admin',
       autenticado: !!token,
+      assinaturaAtiva,
+      diasRestantes,
     }}>
       {children}
     </AuthContext.Provider>

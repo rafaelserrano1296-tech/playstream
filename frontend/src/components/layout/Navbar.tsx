@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, ChevronDown, Menu, X, User, LogOut, ShoppingBag, Settings, Download } from 'lucide-react';
+import { Search, ChevronDown, Menu, X, User, LogOut, ShoppingBag, Settings, Download, Crown } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePWAInstall } from '../../hooks/usePWAInstall';
 
 export default function Navbar() {
-  const { autenticado, usuario, logout, isAdmin } = useAuth();
+  const { autenticado, usuario, logout, isAdmin, assinaturaAtiva, diasRestantes } = useAuth();
   const { podeInstalar, instalado, instalar } = usePWAInstall();
   const [scrolled, setScrolled] = useState(false);
   const [menuAberto, setMenuAberto] = useState(false);
@@ -106,23 +106,37 @@ export default function Navbar() {
                   onClick={() => setUserMenuAberto(!userMenuAberto)}
                   className="flex items-center gap-2 hover:opacity-80 transition-opacity"
                 >
-                  <div className="w-8 h-8 bg-netflix-red rounded flex items-center justify-center text-sm font-bold">
-                    {usuario?.nome[0].toUpperCase()}
+                  <div className="relative">
+                    <div className={`w-8 h-8 rounded flex items-center justify-center text-sm font-bold ${assinaturaAtiva ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-black' : 'bg-netflix-red text-white'}`}>
+                      {usuario?.nome[0].toUpperCase()}
+                    </div>
+                    {assinaturaAtiva && (
+                      <Crown size={10} className="absolute -top-1.5 -right-1.5 text-yellow-400 fill-yellow-400" />
+                    )}
                   </div>
                   <ChevronDown size={14} className={`hidden md:block transition-transform ${userMenuAberto ? 'rotate-180' : ''}`} />
                 </button>
 
                 {userMenuAberto && (
-                  <div className="absolute right-0 top-12 bg-zinc-900 border border-zinc-700 rounded-lg shadow-2xl w-48 py-1 animate-fade-in">
+                  <div className="absolute right-0 top-12 bg-zinc-900 border border-zinc-700 rounded-lg shadow-2xl w-52 py-1 animate-fade-in">
                     <div className="px-4 py-2 border-b border-zinc-700">
                       <p className="text-sm font-semibold truncate">{usuario?.nome}</p>
                       <p className="text-xs text-gray-400 truncate">{usuario?.email}</p>
+                      {assinaturaAtiva && diasRestantes !== null && (
+                        <div className="flex items-center gap-1 mt-1.5">
+                          <Crown size={11} className="text-yellow-400 fill-yellow-400" />
+                          <p className="text-xs text-yellow-400 font-semibold">Premium · {diasRestantes}d restantes</p>
+                        </div>
+                      )}
                     </div>
                     <Link to="/perfil" className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-zinc-800 transition-colors">
                       <User size={15} /> Meu Perfil
                     </Link>
                     <Link to="/minhas-compras" className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-zinc-800 transition-colors">
                       <ShoppingBag size={15} /> Minhas Compras
+                    </Link>
+                    <Link to="/assinar" className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-zinc-800 transition-colors text-yellow-400">
+                      <Crown size={15} /> {assinaturaAtiva ? 'Minha Assinatura' : 'Assinar Premium'}
                     </Link>
                     {isAdmin && (
                       <Link to="/admin" className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-zinc-800 transition-colors text-netflix-red">
