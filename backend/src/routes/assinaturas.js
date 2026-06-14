@@ -26,7 +26,7 @@ router.post('/iniciar', autenticar, async (req, res) => {
       `${ABACATEPAY_URL}/checkouts/create`,
       {
         items: [{
-          id: 'prod_LcewJJq0PyPT52CutJYCdN66',
+          id: 'prod_hnKSXG4SUB1KGCWJyXgbb3tM',
           quantity: 1,
         }],
         returnUrl: `${process.env.FRONTEND_URL}/assinar`,
