@@ -25,17 +25,19 @@ router.post('/iniciar', autenticar, async (req, res) => {
     const response = await axios.post(
       `${ABACATEPAY_URL}/transparents/create`,
       {
-        amount: 990,
-        description: 'Assinatura Play Stream 30 dias',
-        expiresIn: 3600,
-        customer: {
-          name: usuario.nome,
-          email: usuario.email,
-          cellphone: '11999999999',
-          taxId: '00000000000',
-        },
-        metadata: {
-          usuario_id: usuarioId,
+        data: {
+          amount: 990,
+          description: 'Assinatura Play Stream 30 dias',
+          expiresIn: 3600,
+          customer: {
+            name: usuario.nome,
+            email: usuario.email,
+            cellphone: '11999999999',
+            taxId: '00000000000',
+          },
+          metadata: {
+            usuario_id: String(usuarioId),
+          },
         },
       },
       {
