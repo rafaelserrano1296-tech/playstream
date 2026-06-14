@@ -27,6 +27,8 @@ router.post('/iniciar', autenticar, async (req, res) => {
       {
         frequency: 'ONE_TIME',
         methods: ['PIX'],
+        returnUrl: `${process.env.FRONTEND_URL}/assinar`,
+        completionUrl: `${process.env.FRONTEND_URL}/assinar`,
         products: [{
           externalId: 'assinatura-mensal',
           name: 'Assinatura Play Stream — 30 dias',
