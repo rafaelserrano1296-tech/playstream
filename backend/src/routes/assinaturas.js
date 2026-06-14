@@ -23,21 +23,22 @@ router.post('/iniciar', autenticar, async (req, res) => {
 
     // Criar cobrança no AbacatePay
     const response = await axios.post(
-      `${ABACATEPAY_URL}/transparents/create`,
+      `${ABACATEPAY_URL}/checkouts/create`,
       {
-        data: {
-          amount: 990,
-          description: 'Assinatura Play Stream 30 dias',
-          expiresIn: 3600,
-          customer: {
-            name: usuario.nome,
-            email: usuario.email,
-            cellphone: '11999999999',
-            taxId: '00000000000',
-          },
-          metadata: {
-            usuario_id: String(usuarioId),
-          },
+        items: [{
+          id: 'prod_LcewJJq0PyPT52CutJYCdN66',
+          quantity: 1,
+        }],
+        returnUrl: `${process.env.FRONTEND_URL}/assinar`,
+        completionUrl: `${process.env.FRONTEND_URL}/assinar`,
+        customer: {
+          name: usuario.nome,
+          email: usuario.email,
+          cellphone: '11999999999',
+          taxId: '00000000000',
+        },
+        metadata: {
+          usuario_id: String(usuarioId),
         },
       },
       {
@@ -48,9 +49,9 @@ router.post('/iniciar', autenticar, async (req, res) => {
       }
     );
 
-    const billing = response.data.data;
-    const txid = billing.id;
-    const pixCopiaECola = billing.brCode || '';
+    const billing = response.data.data || response.data;
+    const txid = billing.id || billing._id;
+    const pixCopiaECola = billing.brCode || billing.pixCode || billing.url || '';
 
     // Salvar no banco
     await pool.query(
