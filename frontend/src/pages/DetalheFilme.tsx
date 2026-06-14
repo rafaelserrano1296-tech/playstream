@@ -306,11 +306,10 @@ export default function DetalheFilme() {
               <X size={22} />
             </button>
           </div>
-          <div className="flex-1 bg-black">
+          <div className="flex-1 bg-black relative">
             <iframe
               src={getVideoUrl()}
-              className="w-full h-full"
-              style={{ display: 'block' }}
+              className="absolute inset-0 w-full h-full"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
               allowFullScreen
               title={getTituloPlayer()}
