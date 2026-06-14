@@ -23,27 +23,21 @@ router.post('/iniciar', autenticar, async (req, res) => {
 
     // Criar cobrança no AbacatePay
     const response = await axios.post(
-      `${ABACATEPAY_URL}/billing/create`,
+      `${ABACATEPAY_URL}/transparents/create`,
       {
-        frequency: 'ONE_TIME',
-        methods: ['PIX'],
-        returnUrl: `${process.env.FRONTEND_URL}/assinar`,
-        completionUrl: `${process.env.FRONTEND_URL}/assinar`,
-        products: [{
-          externalId: 'assinatura-mensal',
-          name: 'Assinatura Play Stream — 30 dias',
-          description: 'Acesso completo ao catálogo premium por 30 dias',
-          quantity: 1,
-          price: 990,
-        }],
-        customer: {
-          name: usuario.nome,
-          email: usuario.email,
-          cellphone: '11999999999',
-          taxId: '00000000000',
-        },
-        metadata: {
-          usuario_id: usuarioId,
+        data: {
+          amount: 990,
+          description: 'Assinatura Play Stream — 30 dias de acesso premium',
+          expiresIn: 3600,
+          customer: {
+            name: usuario.nome,
+            email: usuario.email,
+            cellphone: '11999999999',
+            taxId: '00000000000',
+          },
+          metadata: {
+            usuario_id: usuarioId,
+          },
         },
       },
       {
@@ -56,7 +50,7 @@ router.post('/iniciar', autenticar, async (req, res) => {
 
     const billing = response.data.data;
     const txid = billing.id;
-    const pixCopiaECola = billing.pixQrCode || billing.brCode || '';
+    const pixCopiaECola = billing.brCode || '';
 
     // Salvar no banco
     await pool.query(
@@ -99,7 +93,7 @@ router.post('/webhook', async (req, res) => {
     const event = req.body;
     console.log('Webhook AbacatePay:', JSON.stringify(event));
 
-    if (event.event === 'billing.paid' || event.status === 'PAID') {
+    if (event.event === 'transparent.completed' || event.event === 'billing.paid' || event.status === 'PAID') {
       const txid = event.data?.id || event.id;
       const usuarioId = event.data?.metadata?.usuario_id || event.metadata?.usuario_id;
 
