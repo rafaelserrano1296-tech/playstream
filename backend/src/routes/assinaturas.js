@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const { autenticar } = require('../middlewares/auth');
-const { pool } = require('../config/database');
+const pool = require('../config/db');
 const axios = require('axios');
 
 const ABACATEPAY_URL = 'https://api.abacatepay.com/v1';
