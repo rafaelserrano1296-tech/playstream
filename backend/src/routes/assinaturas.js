@@ -3,7 +3,7 @@ const { autenticar } = require('../middlewares/auth');
 const pool = require('../config/db');
 const axios = require('axios');
 
-const ABACATEPAY_URL = 'https://api.abacatepay.com/v1';
+const ABACATEPAY_URL = 'https://api.abacatepay.com/v2';
 const ABACATEPAY_KEY = process.env.ABACATEPAY_KEY;
 
 // Criar cobrança PIX de assinatura
