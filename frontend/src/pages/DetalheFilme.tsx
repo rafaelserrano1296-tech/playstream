@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Play, Lock, ArrowLeft, Star, Clock, Calendar, Tag, X, Copy, Check } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import toast from 'react-hot-toast';
-import { Filme, PagamentoPix } from '../types';
+import { Filme, Episodio, PagamentoPix } from '../types';
 import { filmesAPI, pagamentosAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import Loading from '../components/ui/Loading';
@@ -24,6 +24,7 @@ export default function DetalheFilme() {
   const [copiado, setCopiado] = useState(false);
   const [verificando, setVerificando] = useState(false);
   const [playerAberto, setPlayerAberto] = useState(false);
+  const [episodioAtivo, setEpisodioAtivo] = useState<Episodio | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -47,10 +48,11 @@ export default function DetalheFilme() {
     carregar();
   }, [id, autenticado]);
 
-  const handleAssistir = () => {
+  const handleAssistir = (episodio?: Episodio) => {
     if (!filme) return;
 
     if (acesso?.acesso) {
+      if (episodio) setEpisodioAtivo(episodio);
       setPlayerAberto(true);
       return;
     }
@@ -63,6 +65,22 @@ export default function DetalheFilme() {
 
     setModalAberto(true);
     iniciarPagamento();
+  };
+
+  const fecharPlayer = () => {
+    setPlayerAberto(false);
+    setEpisodioAtivo(null);
+  };
+
+  const getVideoUrl = () => {
+    if (episodioAtivo) return getEmbedUrl(episodioAtivo.url_video);
+    if (filme?.url_video) return getEmbedUrl(filme.url_video);
+    return '';
+  };
+
+  const getTituloPlayer = () => {
+    if (episodioAtivo) return `${filme?.titulo} — ${episodioAtivo.titulo}`;
+    return filme?.titulo || '';
   };
 
   const getEmbedUrl = (url: string) => {
@@ -195,28 +213,76 @@ export default function DetalheFilme() {
               <p className="text-gray-300 text-base leading-relaxed mb-6">{filme.descricao}</p>
             )}
 
-            {/* Preço */}
+            {/* Assinatura */}
             {!filme.gratuito && (
-              <div className="mb-6">
-                <p className="text-gray-400 text-sm">Acesso único por</p>
-                <p className="text-3xl font-black text-white">R$ {Number(filme.valor).toFixed(2)}</p>
-                <p className="text-xs text-gray-500 mt-1">Pagamento via PIX • Liberação imediata</p>
+              <div className="mb-6 bg-zinc-800/60 border border-pink-500/30 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Lock size={14} className="text-pink-400" />
+                  <p className="text-pink-400 text-sm font-bold">Conteúdo Exclusivo para Assinantes</p>
+                </div>
+                <p className="text-3xl font-black text-white">R$ 9,90<span className="text-base font-normal text-gray-400">/mês</span></p>
+                <p className="text-xs text-gray-400 mt-1">Acesso a todo o catálogo premium • Pagamento via PIX</p>
               </div>
             )}
 
-            {/* Botão assistir */}
-            <button
-              onClick={handleAssistir}
-              className="flex items-center gap-3 btn-primary text-lg py-4 px-8 w-full md:w-auto justify-center"
-            >
-              {acesso?.acesso ? (
-                <><Play size={22} fill="white" /> Assistir Agora</>
-              ) : !autenticado ? (
-                <><Lock size={20} /> Entrar para Assistir</>
-              ) : (
-                <><Lock size={20} /> Comprar Acesso — R$ {Number(filme.valor).toFixed(2)}</>
-              )}
-            </button>
+            {/* Episódios / Partes */}
+            {filme.episodios && filme.episodios.length > 0 ? (
+              <div className="mb-4">
+                <p className="text-gray-400 text-sm font-semibold mb-3 uppercase tracking-wider">
+                  {filme.episodios.length > 1 ? `${filme.episodios.length} Partes disponíveis` : '1 Parte disponível'}
+                </p>
+                <div className="flex flex-col gap-2">
+                  {filme.episodios.map((ep) => (
+                    <button
+                      key={ep.id}
+                      onClick={() => handleAssistir(ep)}
+                      className="flex items-center gap-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-pink-500 text-white font-semibold py-3 px-4 rounded-xl transition-all active:scale-95 text-left"
+                    >
+                      <div className="w-9 h-9 bg-pink-600 rounded-full flex items-center justify-center flex-shrink-0">
+                        {acesso?.acesso ? (
+                          <Play size={16} fill="white" className="ml-0.5" />
+                        ) : (
+                          <Lock size={15} />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold truncate">{ep.titulo}</p>
+                        {ep.duracao && <p className="text-xs text-gray-400">{ep.duracao}</p>}
+                      </div>
+                      {!acesso?.acesso && (
+                        <span className="text-xs text-yellow-400 font-bold bg-yellow-400/10 px-2 py-0.5 rounded-full flex-shrink-0">PREMIUM</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+                {!acesso?.acesso && (
+                  <button
+                    onClick={() => handleAssistir()}
+                    className="mt-3 flex items-center gap-3 btn-primary text-base py-3 px-6 w-full md:w-auto justify-center"
+                  >
+                    {!autenticado ? (
+                      <><Lock size={18} /> Entrar para Assistir</>
+                    ) : (
+                      <><Lock size={18} /> Assinar por R$9,90/mês</>
+                    )}
+                  </button>
+                )}
+              </div>
+            ) : (
+              /* Botão assistir (filme sem episódios) */
+              <button
+                onClick={() => handleAssistir()}
+                className="flex items-center gap-3 btn-primary text-lg py-4 px-8 w-full md:w-auto justify-center"
+              >
+                {acesso?.acesso ? (
+                  <><Play size={22} fill="white" /> Assistir Agora</>
+                ) : !autenticado ? (
+                  <><Lock size={20} /> Entrar para Assistir</>
+                ) : (
+                  <><Lock size={20} /> Assinar por R$9,90/mês</>
+                )}
+              </button>
+            )}
 
             {acesso?.motivo === 'comprado' && (
               <p className="text-green-400 text-sm mt-2 flex items-center gap-1">
@@ -228,27 +294,27 @@ export default function DetalheFilme() {
       </div>
 
       {/* Player embutido */}
-      {playerAberto && filme?.url_video && (
+      {playerAberto && getVideoUrl() && (
         <div className="fixed inset-0 bg-black z-50 flex flex-col">
           <div className="flex items-center justify-between px-4 py-3 bg-zinc-900 border-b border-zinc-800">
             <div className="flex items-center gap-3">
-              <button onClick={() => setPlayerAberto(false)} className="text-gray-400 hover:text-white">
+              <button onClick={fecharPlayer} className="text-gray-400 hover:text-white">
                 <ArrowLeft size={22} />
               </button>
-              <p className="font-bold text-sm truncate max-w-[200px] md:max-w-none">{filme.titulo}</p>
+              <p className="font-bold text-sm truncate max-w-[200px] md:max-w-none">{getTituloPlayer()}</p>
             </div>
-            <button onClick={() => setPlayerAberto(false)} className="text-gray-400 hover:text-white">
+            <button onClick={fecharPlayer} className="text-gray-400 hover:text-white">
               <X size={22} />
             </button>
           </div>
           <div className="flex-1 bg-black flex items-center justify-center">
             <iframe
-              src={getEmbedUrl(filme.url_video)}
+              src={getVideoUrl()}
               className="w-full h-full"
               style={{ aspectRatio: '16/9', maxHeight: '100%' }}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
               allowFullScreen
-              title={filme.titulo}
+              title={getTituloPlayer()}
             />
           </div>
         </div>
