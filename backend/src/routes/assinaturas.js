@@ -23,16 +23,11 @@ router.post('/iniciar', autenticar, async (req, res) => {
 
     // Criar link de pagamento no AbacatePay
     const response = await axios.post(
-      `${ABACATEPAY_URL}/billing/create`,
+      `${ABACATEPAY_URL}/checkouts/create`,
       {
-        frequency: 'ONE_TIME',
-        methods: ['PIX'],
-        products: [{
-          externalId: String(usuarioId),
-          name: 'Assinatura Play Stream Premium',
-          description: 'Acesso completo ao catálogo de doramas por 30 dias',
+        items: [{
+          id: 'prod_hnKSXG4SUB1KGCWJyXgbb3tM',
           quantity: 1,
-          price: 990,
         }],
         returnUrl: `${process.env.FRONTEND_URL}/assinar`,
         completionUrl: `${process.env.FRONTEND_URL}/assinar?pago=1`,
@@ -54,9 +49,10 @@ router.post('/iniciar', autenticar, async (req, res) => {
       }
     );
 
+    console.log('AbacatePay resposta:', JSON.stringify(response.data));
     const billing = response.data.data || response.data;
     const txid = billing.id || billing._id;
-    const url = billing.url || billing.checkoutUrl || '';
+    const url = billing.url || billing.checkoutUrl || billing.paymentUrl || '';
 
     // Salvar no banco
     await pool.query(
