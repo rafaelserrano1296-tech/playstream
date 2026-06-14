@@ -5,64 +5,65 @@ import { Filme } from '../../types';
 
 interface Props {
   filme: Filme;
+  forcePremium?: boolean;
 }
 
 const PLACEHOLDER = 'https://via.placeholder.com/300x450/1a1a1a/555?text=Sem+Capa';
 
-export default function FilmeCard({ filme }: Props) {
+export default function FilmeCard({ filme, forcePremium }: Props) {
+  const isPremium = forcePremium || !filme.gratuito;
+
   return (
-    <Link to={`/filme/${filme.id}`} className="group relative block rounded-md overflow-hidden bg-zinc-900 card-hover cursor-pointer">
+    <Link to={`/filme/${filme.id}`} className="group relative block rounded-xl overflow-hidden bg-zinc-900 card-hover cursor-pointer shadow-lg">
       {/* Capa */}
       <div className="relative aspect-[2/3] overflow-hidden">
         <img
           src={filme.capa_url || PLACEHOLDER}
           alt={filme.titulo}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${isPremium ? 'brightness-50' : ''}`}
           loading="lazy"
           onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER; }}
         />
 
-        {/* Overlay hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        {/* Overlay gradiente */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
 
-        {/* Badge */}
-        <div className="absolute top-2 left-2">
-          {filme.gratuito ? (
-            <span className="bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">GRÁTIS</span>
-          ) : (
-            <span className="bg-netflix-red text-white text-[10px] font-bold px-2 py-0.5 rounded">PREMIUM</span>
-          )}
-        </div>
-
-        {/* Cadeado */}
-        {!filme.gratuito && (
-          <div className="absolute top-2 right-2 bg-black/70 rounded-full p-1">
-            <Lock size={12} className="text-yellow-400" />
+        {/* Cadeado grande para premium */}
+        {isPremium && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+            <div className="w-14 h-14 bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-yellow-400/50">
+              <Lock size={26} className="text-yellow-400" />
+            </div>
+            <span className="text-yellow-400 text-xs font-bold bg-black/60 px-2 py-0.5 rounded-full">PREMIUM</span>
           </div>
         )}
 
-        {/* Botão play no hover */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/50">
-            <Play size={20} className="text-white ml-1" fill="white" />
+        {/* Badge grátis */}
+        {!isPremium && (
+          <div className="absolute top-2 left-2">
+            <span className="bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">GRÁTIS</span>
           </div>
-        </div>
+        )}
+
+        {/* Botão play no hover (só grátis) */}
+        {!isPremium && (
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/50">
+              <Play size={20} className="text-white ml-1" fill="white" />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Info */}
       <div className="p-2">
-        <h3 className="text-sm font-semibold truncate text-white group-hover:text-netflix-red transition-colors">
+        <h3 className="text-sm font-semibold truncate text-white group-hover:text-pink-400 transition-colors">
           {filme.titulo}
         </h3>
         <div className="flex items-center justify-between mt-1">
-          <span className="text-xs text-gray-400 capitalize">{filme.tipo}</span>
+          <span className="text-xs text-gray-400 capitalize">{filme.tipo === 'serie' ? 'Dorama' : 'Filme'}</span>
           {filme.ano && <span className="text-xs text-gray-500">{filme.ano}</span>}
         </div>
-        {!filme.gratuito && (
-          <p className="text-xs text-yellow-400 font-semibold mt-1">
-            R$ {Number(filme.valor).toFixed(2)}
-          </p>
-        )}
       </div>
     </Link>
   );
