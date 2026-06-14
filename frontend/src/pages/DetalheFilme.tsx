@@ -13,7 +13,7 @@ const PLACEHOLDER = 'https://via.placeholder.com/800x1200/1a1a1a/555?text=Sem+Ca
 export default function DetalheFilme() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { autenticado } = useAuth();
+  const { autenticado, assinaturaAtiva } = useAuth();
 
   const [filme, setFilme] = useState<Filme | null>(null);
   const [loading, setLoading] = useState(true);
@@ -212,8 +212,8 @@ export default function DetalheFilme() {
               <p className="text-gray-300 text-base leading-relaxed mb-6">{filme.descricao}</p>
             )}
 
-            {/* Assinatura */}
-            {!filme.gratuito && (
+            {/* Assinatura — só mostra se não for assinante */}
+            {!filme.gratuito && !assinaturaAtiva && (
               <div className="mb-6 bg-zinc-800/60 border border-pink-500/30 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-1">
                   <Lock size={14} className="text-pink-400" />
