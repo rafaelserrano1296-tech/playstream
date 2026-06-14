@@ -55,6 +55,12 @@ export const pagamentosAPI = {
   minhasCompras: () => api.get('/pagamentos/minhas-compras'),
 };
 
+// ASSINATURAS
+export const assinaturasAPI = {
+  iniciar: () => api.post('/assinaturas/iniciar'),
+  status: () => api.get('/assinaturas/status'),
+};
+
 // ADMIN
 export const adminAPI = {
   dashboard: () => api.get('/admin/dashboard'),

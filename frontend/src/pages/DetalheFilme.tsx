@@ -63,8 +63,7 @@ export default function DetalheFilme() {
       return;
     }
 
-    setModalAberto(true);
-    iniciarPagamento();
+    navigate('/assinar');
   };
 
   const fecharPlayer = () => {

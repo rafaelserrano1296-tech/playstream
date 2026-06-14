@@ -11,6 +11,7 @@ import DetalheFilme from './pages/DetalheFilme';
 import MinhasCompras from './pages/MinhasCompras';
 import Perfil from './pages/Perfil';
 import Busca from './pages/Busca';
+import Assinatura from './pages/Assinatura';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminFilmes from './pages/admin/AdminFilmes';
@@ -53,6 +54,7 @@ export default function App() {
         <Route path="/filme/:id" element={<RotaPrivada><DetalheFilme /></RotaPrivada>} />
         <Route path="/minhas-compras" element={<RotaPrivada><MinhasCompras /></RotaPrivada>} />
         <Route path="/perfil" element={<RotaPrivada><Perfil /></RotaPrivada>} />
+        <Route path="/assinar" element={<RotaPrivada><Assinatura /></RotaPrivada>} />
         <Route path="/admin" element={<RotaAdmin><AdminLayout /></RotaAdmin>}>
           <Route index element={<AdminDashboard />} />
           <Route path="filmes" element={<AdminFilmes />} />
