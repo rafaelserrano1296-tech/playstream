@@ -3,10 +3,9 @@ const { autenticar } = require('../middlewares/auth');
 const pool = require('../config/db');
 const axios = require('axios');
 
-const ABACATEPAY_URL = 'https://api.abacatepay.com/v2';
-const ABACATEPAY_KEY = process.env.ABACATEPAY_KEY;
+const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
 
-// Criar link de pagamento AbacatePay
+// Criar preferência de pagamento Mercado Pago
 router.post('/iniciar', autenticar, async (req, res) => {
   try {
     const usuarioId = req.usuario.id;
@@ -21,38 +20,48 @@ router.post('/iniciar', autenticar, async (req, res) => {
       return res.json({ assinatura_ativa: true, data_fim: ativas[0].data_fim });
     }
 
-    // Criar link de pagamento no AbacatePay
+    // Criar preferência no Mercado Pago
     const response = await axios.post(
-      `${ABACATEPAY_URL}/checkouts/create`,
+      'https://api.mercadopago.com/checkout/preferences',
       {
         items: [{
-          id: 'prod_hnKSXG4SUB1KGCWJyXgbb3tM',
+          title: 'Assinatura Play Stream Premium',
+          description: 'Acesso completo ao catálogo de doramas por 30 dias',
           quantity: 1,
+          currency_id: 'BRL',
+          unit_price: 9.90,
         }],
-        returnUrl: `${process.env.FRONTEND_URL}/assinar`,
-        completionUrl: `${process.env.FRONTEND_URL}/assinar?pago=1`,
-        customer: {
+        payer: {
           name: usuario.nome,
           email: usuario.email,
-          cellphone: '11999999999',
-          taxId: '00000000000',
         },
+        back_urls: {
+          success: `${process.env.FRONTEND_URL}/assinar?pago=1`,
+          failure: `${process.env.FRONTEND_URL}/assinar?erro=1`,
+          pending: `${process.env.FRONTEND_URL}/assinar?pago=1`,
+        },
+        auto_return: 'approved',
+        notification_url: `${process.env.BACKEND_URL}/api/assinaturas/webhook`,
         metadata: {
           usuario_id: String(usuarioId),
         },
+        payment_methods: {
+          excluded_payment_types: [],
+          installments: 1,
+        },
+        statement_descriptor: 'PLAY STREAM',
       },
       {
         headers: {
-          Authorization: `Bearer ${ABACATEPAY_KEY}`,
+          Authorization: `Bearer ${MP_ACCESS_TOKEN}`,
           'Content-Type': 'application/json',
         },
       }
     );
 
-    console.log('AbacatePay resposta:', JSON.stringify(response.data));
-    const billing = response.data.data || response.data;
-    const txid = billing.id || billing._id;
-    const url = billing.url || billing.checkoutUrl || billing.paymentUrl || '';
+    const preference = response.data;
+    const txid = preference.id;
+    const url = preference.init_point;
 
     // Salvar no banco
     await pool.query(
@@ -61,13 +70,9 @@ router.post('/iniciar', autenticar, async (req, res) => {
       [usuarioId, txid, url]
     );
 
-    res.json({
-      txid,
-      url,
-      valor: 9.90,
-    });
+    res.json({ txid, url, valor: 9.90 });
   } catch (err) {
-    console.error('Erro AbacatePay:', err.response?.data || err.message);
+    console.error('Erro Mercado Pago:', err.response?.data || err.message);
     res.status(500).json({ error: 'Erro ao gerar link de pagamento' });
   }
 });
@@ -88,34 +93,44 @@ router.get('/status', autenticar, async (req, res) => {
   }
 });
 
-// Webhook AbacatePay — chamado automaticamente quando pagar
+// Webhook Mercado Pago — chamado automaticamente quando pagar
 router.post('/webhook', async (req, res) => {
   try {
-    const event = req.body;
-    console.log('Webhook AbacatePay:', JSON.stringify(event));
+    const { type, data } = req.body;
+    console.log('Webhook MP:', JSON.stringify(req.body));
 
-    if (event.event === 'billing.paid' || event.event === 'transparent.completed' || event.status === 'PAID') {
-      const txid = event.data?.id || event.data?.billing?.id || event.id;
-      const usuarioId = event.data?.metadata?.usuario_id || event.data?.billing?.metadata?.usuario_id || event.metadata?.usuario_id;
-
-      if (!txid) return res.json({ ok: true });
-
-      // Ativar assinatura por 30 dias
-      const dataInicio = new Date();
-      const dataFim = new Date();
-      dataFim.setDate(dataFim.getDate() + 30);
-
-      await pool.query(
-        `UPDATE assinaturas SET status = 'ativa', data_inicio = $1, data_fim = $2 WHERE txid = $3`,
-        [dataInicio, dataFim, txid]
+    if (type === 'payment' && data?.id) {
+      // Buscar detalhes do pagamento
+      const pagamento = await axios.get(
+        `https://api.mercadopago.com/v1/payments/${data.id}`,
+        { headers: { Authorization: `Bearer ${MP_ACCESS_TOKEN}` } }
       );
 
-      console.log(`Assinatura ativada para usuario ${usuarioId} até ${dataFim}`);
+      const p = pagamento.data;
+      console.log('Pagamento MP:', p.status, p.metadata);
+
+      if (p.status === 'approved') {
+        const usuarioId = p.metadata?.usuario_id;
+        const txid = p.preference_id;
+
+        if (!txid) return res.json({ ok: true });
+
+        const dataInicio = new Date();
+        const dataFim = new Date();
+        dataFim.setDate(dataFim.getDate() + 30);
+
+        await pool.query(
+          `UPDATE assinaturas SET status = 'ativa', data_inicio = $1, data_fim = $2 WHERE txid = $3`,
+          [dataInicio, dataFim, txid]
+        );
+
+        console.log(`Assinatura ativada para usuario ${usuarioId} até ${dataFim}`);
+      }
     }
 
     res.json({ ok: true });
   } catch (err) {
-    console.error('Erro webhook:', err.message);
+    console.error('Erro webhook MP:', err.message);
     res.status(500).json({ error: 'Erro no webhook' });
   }
 });
