@@ -316,8 +316,17 @@ export default function DetalheFilme() {
           <div className="flex-1 bg-black relative overflow-hidden">
             <iframe
               src={playerUrl}
-              className="absolute w-full h-full"
-              style={{ top: 0, left: 0, border: 'none' }}
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                width: '177.78vh',
+                height: '100vh',
+                minWidth: '100%',
+                minHeight: '56.25vw',
+                transform: 'translate(-50%, -50%)',
+                border: 'none',
+              }}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
               allowFullScreen
               title={getTituloPlayer()}
