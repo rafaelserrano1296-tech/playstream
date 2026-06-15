@@ -98,7 +98,7 @@ export default function DetalheFilme() {
       if (u.hostname.includes('dailymotion.com')) {
         const parts = u.pathname.split('/');
         const videoId = parts[parts.length - 1].split('_')[0];
-        return `https://www.dailymotion.com/embed/video/${videoId}?autoplay=1`;
+        return `https://www.dailymotion.com/embed/video/${videoId}?autoplay=1&mute=0&sharing-enable=0&ui-logo=0&queue-enable=0`;
       }
       return url;
     } catch {
@@ -313,10 +313,11 @@ export default function DetalheFilme() {
           <div className="md:hidden bg-zinc-800 text-center py-1.5 text-xs text-gray-400 flex items-center justify-center gap-2">
             <span>📱 Vire o celular para melhor experiência</span>
           </div>
-          <div className="flex-1 bg-black relative">
+          <div className="flex-1 bg-black relative overflow-hidden">
             <iframe
               src={playerUrl}
-              className="absolute inset-0 w-full h-full"
+              className="absolute w-full h-full"
+              style={{ top: 0, left: 0, border: 'none' }}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
               allowFullScreen
               title={getTituloPlayer()}
