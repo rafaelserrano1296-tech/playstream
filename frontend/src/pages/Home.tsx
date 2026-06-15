@@ -14,7 +14,6 @@ function getBadge(filme: Filme) {
   if (!filme.gratuito && filme.destaque) return { label: '👑 EXCLUSIVO', cls: 'bg-gradient-to-r from-yellow-500 to-amber-400 text-black' };
   if (!filme.gratuito && filme.lancamento) return { label: '⭐ PREMIUM', cls: 'bg-gradient-to-r from-pink-600 to-rose-500 text-white' };
   if (!filme.gratuito) return { label: '⭐ PREMIUM', cls: 'bg-gradient-to-r from-pink-600 to-rose-500 text-white' };
-  if (filme.destaque) return { label: '🔥 MAIS VISTO', cls: 'bg-gradient-to-r from-orange-500 to-red-500 text-white' };
   return null;
 }
 
