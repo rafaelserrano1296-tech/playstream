@@ -5,13 +5,11 @@ const axios = require('axios');
 
 const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
 
-// Criar preferência de pagamento Mercado Pago
 router.post('/iniciar', autenticar, async (req, res) => {
   try {
     const usuarioId = req.usuario.id;
     const usuario = req.usuario;
 
-    // Verificar se já tem assinatura ativa
     const { rows: ativas } = await pool.query(
       `SELECT * FROM assinaturas WHERE usuario_id = $1 AND status = 'ativa' AND data_fim > NOW()`,
       [usuarioId]
@@ -20,64 +18,56 @@ router.post('/iniciar', autenticar, async (req, res) => {
       return res.json({ assinatura_ativa: true, data_fim: ativas[0].data_fim });
     }
 
-    // Criar preferência no Mercado Pago
+    // Gerar PIX transparente
     const response = await axios.post(
-      'https://api.mercadopago.com/checkout/preferences',
+      'https://api.mercadopago.com/v1/payments',
       {
-        items: [{
-          title: 'Assinatura Play Stream Premium',
-          description: 'Acesso completo ao catálogo de doramas por 30 dias',
-          quantity: 1,
-          currency_id: 'BRL',
-          unit_price: 9.90,
-        }],
+        transaction_amount: 9.90,
+        description: 'Assinatura Play Stream Premium - 30 dias',
+        payment_method_id: 'pix',
         payer: {
-          name: usuario.nome,
           email: usuario.email,
+          first_name: usuario.nome.split(' ')[0],
+          last_name: usuario.nome.split(' ').slice(1).join(' ') || usuario.nome.split(' ')[0],
         },
-        back_urls: {
-          success: `${process.env.FRONTEND_URL}/assinar?pago=1`,
-          failure: `${process.env.FRONTEND_URL}/assinar?erro=1`,
-          pending: `${process.env.FRONTEND_URL}/assinar?pago=1`,
-        },
-        auto_return: 'approved',
-        notification_url: `${process.env.BACKEND_URL}/api/assinaturas/webhook`,
         metadata: {
           usuario_id: String(usuarioId),
         },
-        payment_methods: {
-          excluded_payment_types: [],
-          installments: 1,
-        },
-        statement_descriptor: 'PLAY STREAM',
+        notification_url: `${process.env.BACKEND_URL}/api/assinaturas/webhook`,
       },
       {
         headers: {
           Authorization: `Bearer ${MP_ACCESS_TOKEN}`,
           'Content-Type': 'application/json',
+          'X-Idempotency-Key': `${usuarioId}-${Date.now()}`,
         },
       }
     );
 
-    const preference = response.data;
-    const txid = preference.id;
-    const url = preference.init_point;
+    const payment = response.data;
+    const txid = String(payment.id);
+    const pixCopiaECola = payment.point_of_interaction?.transaction_data?.qr_code || '';
+    const qrCodeBase64 = payment.point_of_interaction?.transaction_data?.qr_code_base64 || '';
 
-    // Salvar no banco
     await pool.query(
       `INSERT INTO assinaturas (usuario_id, txid, pix_copia_cola, status, valor)
-       VALUES ($1, $2, $3, 'pendente', 9.90)`,
-      [usuarioId, txid, url]
+       VALUES ($1, $2, $3, 'pendente', 9.90)
+       ON CONFLICT DO NOTHING`,
+      [usuarioId, txid, pixCopiaECola]
     );
 
-    res.json({ txid, url, valor: 9.90 });
+    res.json({
+      txid,
+      pix_copia_cola: pixCopiaECola,
+      qr_code_base64: qrCodeBase64,
+      valor: 9.90,
+    });
   } catch (err) {
-    console.error('Erro Mercado Pago:', err.response?.data || err.message);
-    res.status(500).json({ error: 'Erro ao gerar link de pagamento' });
+    console.error('Erro MP PIX:', err.response?.data || err.message);
+    res.status(500).json({ error: 'Erro ao gerar PIX' });
   }
 });
 
-// Verificar status da assinatura do usuário
 router.get('/status', autenticar, async (req, res) => {
   try {
     const { rows } = await pool.query(
@@ -93,44 +83,38 @@ router.get('/status', autenticar, async (req, res) => {
   }
 });
 
-// Webhook Mercado Pago — chamado automaticamente quando pagar
 router.post('/webhook', async (req, res) => {
   try {
     const { type, data } = req.body;
     console.log('Webhook MP:', JSON.stringify(req.body));
 
     if (type === 'payment' && data?.id) {
-      // Buscar detalhes do pagamento
       const pagamento = await axios.get(
         `https://api.mercadopago.com/v1/payments/${data.id}`,
         { headers: { Authorization: `Bearer ${MP_ACCESS_TOKEN}` } }
       );
 
       const p = pagamento.data;
-      console.log('Pagamento MP:', p.status, p.metadata);
+      console.log('Pagamento MP status:', p.status, 'usuario_id:', p.metadata?.usuario_id);
 
       if (p.status === 'approved') {
         const usuarioId = p.metadata?.usuario_id;
-        const preferenceId = p.preference_id;
-
-        console.log('Ativando assinatura - usuarioId:', usuarioId, 'preferenceId:', preferenceId);
+        const txid = String(p.id);
 
         const dataInicio = new Date();
         const dataFim = new Date();
         dataFim.setDate(dataFim.getDate() + 30);
 
         if (usuarioId) {
-          // Ativa por usuario_id (mais confiável)
           await pool.query(
             `UPDATE assinaturas SET status = 'ativa', data_inicio = $1, data_fim = $2
              WHERE usuario_id = $3 AND status = 'pendente'`,
             [dataInicio, dataFim, usuarioId]
           );
-        } else if (preferenceId) {
-          // Fallback por txid
+        } else {
           await pool.query(
             `UPDATE assinaturas SET status = 'ativa', data_inicio = $1, data_fim = $2 WHERE txid = $3`,
-            [dataInicio, dataFim, preferenceId]
+            [dataInicio, dataFim, txid]
           );
         }
 
