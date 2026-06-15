@@ -1,12 +1,36 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Play, Info, ChevronLeft, ChevronRight, Search, X, Flame, Gift, Star, Tv } from 'lucide-react';
+import { Play, Info, ChevronLeft, ChevronRight, Search, X, Gift, Crown, Sparkles, Clock } from 'lucide-react';
 import { Filme } from '../types';
 import { filmesAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import FilmeCard from '../components/ui/FilmeCard';
 import Loading from '../components/ui/Loading';
 
 const PLACEHOLDER = 'https://via.placeholder.com/1280x720/1a1a1a/555?text=Play+Stream';
+const HISTORICO_KEY = 'ps_historico';
+
+function getBadge(filme: Filme) {
+  if (!filme.gratuito && filme.destaque) return { label: '👑 EXCLUSIVO', cls: 'bg-gradient-to-r from-yellow-500 to-amber-400 text-black' };
+  if (!filme.gratuito && filme.lancamento) return { label: '⭐ PREMIUM', cls: 'bg-gradient-to-r from-pink-600 to-rose-500 text-white' };
+  if (!filme.gratuito) return { label: '⭐ PREMIUM', cls: 'bg-gradient-to-r from-pink-600 to-rose-500 text-white' };
+  if (filme.destaque) return { label: '🔥 MAIS VISTO', cls: 'bg-gradient-to-r from-orange-500 to-red-500 text-white' };
+  return null;
+}
+
+function FilmeCardBadge({ filme, forcePremium }: { filme: Filme; forcePremium?: boolean }) {
+  const badge = getBadge(filme);
+  return (
+    <div className="relative">
+      {badge && (
+        <div className={`absolute top-2 left-2 z-10 text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg ${badge.cls}`}>
+          {badge.label}
+        </div>
+      )}
+      <FilmeCard filme={filme} forcePremium={forcePremium} />
+    </div>
+  );
+}
 
 function Slider({ titulo, icone, filmes, forcePremium }: { titulo: string; icone: React.ReactNode; filmes: Filme[]; forcePremium?: boolean }) {
   const ref = React.useRef<HTMLDivElement>(null);
@@ -27,7 +51,7 @@ function Slider({ titulo, icone, filmes, forcePremium }: { titulo: string; icone
         <div ref={ref} className="flex gap-3 overflow-x-auto px-4 md:px-0 pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {filmes.map((filme) => (
             <div key={filme.id} className="flex-shrink-0 w-36 sm:w-40 md:w-44">
-              <FilmeCard filme={filme} forcePremium={forcePremium} />
+              <FilmeCardBadge filme={filme} forcePremium={forcePremium} />
             </div>
           ))}
         </div>
@@ -46,7 +70,9 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [bannerIdx, setBannerIdx] = useState(0);
   const [busca, setBusca] = useState('');
+  const [historico, setHistorico] = useState<Filme[]>([]);
   const navigate = useNavigate();
+  const { assinaturaAtiva } = useAuth();
 
   useEffect(() => {
     const carregar = async () => {
@@ -56,8 +82,18 @@ export default function Home() {
           filmesAPI.listar({ destaque: true, limit: 5 }),
           filmesAPI.listar({ limit: 100 }),
         ]);
+        const todosFilmes: Filme[] = todosRes.data.filmes || [];
         setDestaques(destRes.data.filmes || []);
-        setTodos(todosRes.data.filmes || []);
+        setTodos(todosFilmes);
+
+        // Carregar histórico do localStorage
+        const ids: string[] = JSON.parse(localStorage.getItem(HISTORICO_KEY) || '[]');
+        if (ids.length) {
+          const hist = ids
+            .map((id) => todosFilmes.find((f) => f.id === id))
+            .filter(Boolean) as Filme[];
+          setHistorico(hist);
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -78,11 +114,9 @@ export default function Home() {
     if (busca.trim()) navigate(`/busca?q=${encodeURIComponent(busca.trim())}`);
   };
 
-  const emAlta = todos.filter((f) => f.destaque);
   const gratis = todos.filter((f) => f.gratuito);
   const premium = todos.filter((f) => !f.gratuito);
-  const lancamentos = todos.filter((f) => f.lancamento);
-
+  const recemAdicionados = [...todos].reverse().slice(0, 15);
   const bannerAtual = destaques[bannerIdx];
 
   if (loading) return <Loading fullScreen />;
@@ -99,8 +133,10 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d14] via-transparent to-transparent" />
 
           <div className="absolute bottom-0 left-0 right-0 pb-20 px-6 md:px-16 max-w-2xl">
-            {!bannerAtual.gratuito && (
-              <span className="inline-block bg-pink-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-3">PREMIUM</span>
+            {getBadge(bannerAtual) && (
+              <span className={`inline-block text-xs font-black px-3 py-1 rounded-full mb-3 shadow-lg ${getBadge(bannerAtual)!.cls}`}>
+                {getBadge(bannerAtual)!.label}
+              </span>
             )}
             <h1 className="text-3xl md:text-5xl font-black text-white mb-4 leading-tight drop-shadow-2xl">
               {bannerAtual.titulo}
@@ -149,11 +185,19 @@ export default function Home() {
           )}
         </form>
 
-        {/* Seções */}
-        <Slider titulo="Em Alta" icone={<Flame size={20} className="text-orange-400" />} filmes={emAlta} />
+        {/* Continue Assistindo */}
+        {historico.length > 0 && (
+          <Slider
+            titulo="Continue Assistindo"
+            icone={<Clock size={20} className="text-blue-400" />}
+            filmes={historico}
+          />
+        )}
+
+        {/* Seções na nova ordem */}
         <Slider titulo="Doramas Grátis" icone={<Gift size={20} className="text-green-400" />} filmes={gratis} />
-        <Slider titulo="Exclusivos Premium" icone={<Star size={20} className="text-yellow-400" />} filmes={premium} forcePremium />
-        <Slider titulo="Lançamentos" icone={<Tv size={20} className="text-pink-400" />} filmes={lancamentos} />
+        <Slider titulo="Exclusivos Premium" icone={<Crown size={20} className="text-yellow-400" />} filmes={premium} forcePremium />
+        <Slider titulo="Recém Adicionados" icone={<Sparkles size={20} className="text-pink-400" />} filmes={recemAdicionados} />
 
         {!todos.length && (
           <div className="text-center py-24">

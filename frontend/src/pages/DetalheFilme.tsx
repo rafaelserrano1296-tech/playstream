@@ -39,6 +39,12 @@ export default function DetalheFilme() {
         } else {
           setAcesso({ acesso: res.data.gratuito, motivo: res.data.gratuito ? 'gratuito' : 'login_necessario' });
         }
+
+        // Salvar no histórico
+        const HISTORICO_KEY = 'ps_historico';
+        const hist: string[] = JSON.parse(localStorage.getItem(HISTORICO_KEY) || '[]');
+        const novo = [id, ...hist.filter((i) => i !== id)].slice(0, 10);
+        localStorage.setItem(HISTORICO_KEY, JSON.stringify(novo));
       } catch {
         toast.error('Filme não encontrado');
         navigate('/');
