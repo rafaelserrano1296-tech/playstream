@@ -25,6 +25,7 @@ export default function DetalheFilme() {
   const [verificando, setVerificando] = useState(false);
   const [playerAberto, setPlayerAberto] = useState(false);
   const [episodioAtivo, setEpisodioAtivo] = useState<Episodio | null>(null);
+  const [playerUrl, setPlayerUrl] = useState('');
 
   useEffect(() => {
     if (!id) return;
@@ -52,7 +53,9 @@ export default function DetalheFilme() {
     if (!filme) return;
 
     if (acesso?.acesso) {
-      if (episodio) setEpisodioAtivo(episodio);
+      const url = episodio?.url_video || filme?.url_video || '';
+      setEpisodioAtivo(episodio || null);
+      setPlayerUrl(getEmbedUrl(url));
       setPlayerAberto(true);
       return;
     }
@@ -69,12 +72,12 @@ export default function DetalheFilme() {
   const fecharPlayer = () => {
     setPlayerAberto(false);
     setEpisodioAtivo(null);
+    setPlayerUrl('');
   };
 
   const getVideoUrl = () => {
-    if (episodioAtivo) return getEmbedUrl(episodioAtivo.url_video);
-    if (filme?.url_video) return getEmbedUrl(filme.url_video);
-    return '';
+    const url = episodioAtivo?.url_video || filme?.url_video || '';
+    return url ? getEmbedUrl(url) : '';
   };
 
   const getTituloPlayer = () => {
@@ -293,7 +296,7 @@ export default function DetalheFilme() {
       </div>
 
       {/* Player embutido */}
-      {playerAberto && getVideoUrl() && (
+      {playerAberto && playerUrl && (
         <div className="fixed inset-0 bg-black z-50 flex flex-col">
           <div className="flex items-center justify-between px-4 py-3 bg-zinc-900/90 border-b border-zinc-800">
             <div className="flex items-center gap-3">
@@ -312,7 +315,7 @@ export default function DetalheFilme() {
           </div>
           <div className="flex-1 bg-black relative">
             <iframe
-              src={getVideoUrl()}
+              src={playerUrl}
               className="absolute inset-0 w-full h-full"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
               allowFullScreen
