@@ -306,6 +306,10 @@ export default function DetalheFilme() {
               <X size={22} />
             </button>
           </div>
+          {/* Aviso para virar celular — só mobile */}
+          <div className="md:hidden bg-zinc-800 text-center py-1.5 text-xs text-gray-400 flex items-center justify-center gap-2">
+            <span>📱 Vire o celular para melhor experiência</span>
+          </div>
           <div className="flex-1 bg-black relative">
             <iframe
               src={getVideoUrl()}
