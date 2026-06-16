@@ -270,7 +270,7 @@ export default function DetalheFilme() {
                     {!autenticado ? (
                       <><Lock size={18} /> Entrar para Assistir</>
                     ) : (
-                      <><Lock size={18} /> Ver Planos e Assinar</>
+                      <><Lock size={18} /> 👑 Assinar Agora</>
                     )}
                   </button>
                 )}
@@ -286,7 +286,7 @@ export default function DetalheFilme() {
                 ) : !autenticado ? (
                   <><Lock size={20} /> Entrar para Assistir</>
                 ) : (
-                  <><Lock size={20} /> Ver Planos e Assinar</>
+                  <><Lock size={20} /> 👑 Assinar Agora</>
                 )}
               </button>
             )}
