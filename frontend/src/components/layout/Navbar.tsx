@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, ChevronDown, Menu, X, User, LogOut, ShoppingBag, Settings, Download, Crown } from 'lucide-react';
+import { Search, ChevronDown, Menu, X, User, LogOut, Settings, Download, Crown } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePWAInstall } from '../../hooks/usePWAInstall';
 
@@ -131,9 +131,6 @@ export default function Navbar() {
                     </div>
                     <Link to="/perfil" className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-zinc-800 transition-colors">
                       <User size={15} /> Meu Perfil
-                    </Link>
-                    <Link to="/minhas-compras" className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-zinc-800 transition-colors">
-                      <ShoppingBag size={15} /> Minhas Compras
                     </Link>
                     <Link to="/assinar" className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-zinc-800 transition-colors text-yellow-400">
                       <Crown size={15} /> {assinaturaAtiva ? 'Minha Assinatura' : 'Assinar Premium'}
