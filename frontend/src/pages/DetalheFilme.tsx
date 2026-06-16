@@ -224,12 +224,22 @@ export default function DetalheFilme() {
             {/* Assinatura — só mostra se não for assinante */}
             {!filme.gratuito && !assinaturaAtiva && (
               <div className="mb-6 bg-zinc-800/60 border border-pink-500/30 rounded-xl p-4">
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-2">
                   <Lock size={14} className="text-pink-400" />
                   <p className="text-pink-400 text-sm font-bold">Conteúdo Exclusivo para Assinantes</p>
                 </div>
-                <p className="text-3xl font-black text-white">R$ 9,90<span className="text-base font-normal text-gray-400">/mês</span></p>
-                <p className="text-xs text-gray-400 mt-1">Acesso a todo o catálogo premium • Pagamento via PIX</p>
+                <div className="flex gap-3">
+                  <div className="flex-1 bg-zinc-700/50 rounded-lg p-2 text-center">
+                    <p className="text-xs text-gray-400">Semanal</p>
+                    <p className="text-lg font-black text-white">R$7,99</p>
+                    <p className="text-[10px] text-gray-500">7 dias</p>
+                  </div>
+                  <div className="flex-1 bg-pink-500/20 border border-pink-500/50 rounded-lg p-2 text-center">
+                    <p className="text-[10px] text-pink-400 font-bold">POPULAR</p>
+                    <p className="text-lg font-black text-white">R$14,99</p>
+                    <p className="text-[10px] text-gray-500">30 dias</p>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -271,7 +281,7 @@ export default function DetalheFilme() {
                     {!autenticado ? (
                       <><Lock size={18} /> Entrar para Assistir</>
                     ) : (
-                      <><Lock size={18} /> Assinar por R$9,90/mês</>
+                      <><Lock size={18} /> Ver Planos e Assinar</>
                     )}
                   </button>
                 )}
@@ -287,7 +297,7 @@ export default function DetalheFilme() {
                 ) : !autenticado ? (
                   <><Lock size={20} /> Entrar para Assistir</>
                 ) : (
-                  <><Lock size={20} /> Assinar por R$9,90/mês</>
+                  <><Lock size={20} /> Ver Planos e Assinar</>
                 )}
               </button>
             )}
