@@ -85,13 +85,11 @@ export default function Home() {
         setDestaques(destRes.data.filmes || []);
         setTodos(todosFilmes);
 
-        // Carregar histórico do localStorage
+        // Carregar último filme assistido
         const ids: string[] = JSON.parse(localStorage.getItem(HISTORICO_KEY) || '[]');
         if (ids.length) {
-          const hist = ids
-            .map((id) => todosFilmes.find((f) => f.id === id))
-            .filter(Boolean) as Filme[];
-          setHistorico(hist);
+          const ultimo = todosFilmes.find((f) => f.id === ids[0]);
+          if (ultimo) setHistorico([ultimo]);
         }
       } catch (err) {
         console.error(err);
