@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Lock, Play, Crown } from 'lucide-react';
 import { Filme } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
@@ -13,11 +13,19 @@ const PLACEHOLDER = 'https://via.placeholder.com/300x450/1a1a1a/555?text=Sem+Cap
 
 export default function FilmeCard({ filme, forcePremium }: Props) {
   const { assinaturaAtiva } = useAuth();
+  const navigate = useNavigate();
   const isPremium = forcePremium || !filme.gratuito;
   const bloqueado = isPremium && !assinaturaAtiva;
 
+  const handleClick = (e: React.MouseEvent) => {
+    if (bloqueado) {
+      e.preventDefault();
+      navigate('/assinar');
+    }
+  };
+
   return (
-    <Link to={`/filme/${filme.id}`} className="group relative block rounded-xl overflow-hidden bg-zinc-900 card-hover cursor-pointer shadow-lg">
+    <Link to={`/filme/${filme.id}`} onClick={handleClick} className="group relative block rounded-xl overflow-hidden bg-zinc-900 card-hover cursor-pointer shadow-lg">
       {/* Capa */}
       <div className="relative aspect-[2/3] overflow-hidden">
         <img
