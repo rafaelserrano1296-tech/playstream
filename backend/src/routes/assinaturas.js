@@ -5,10 +5,17 @@ const axios = require('axios');
 
 const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
 
+const PLANOS = {
+  semanal: { valor: 7.99, dias: 7, descricao: 'Assinatura Play Stream - 7 dias' },
+  mensal:  { valor: 14.99, dias: 30, descricao: 'Assinatura Play Stream Premium - 30 dias' },
+};
+
 router.post('/iniciar', autenticar, async (req, res) => {
   try {
     const usuarioId = req.usuario.id;
     const usuario = req.usuario;
+    const plano = PLANOS[req.body.plano] ? req.body.plano : 'mensal';
+    const { valor, dias, descricao } = PLANOS[plano];
 
     const { rows: ativas } = await pool.query(
       `SELECT * FROM assinaturas WHERE usuario_id = $1 AND status = 'ativa' AND data_fim > NOW()`,
@@ -18,12 +25,11 @@ router.post('/iniciar', autenticar, async (req, res) => {
       return res.json({ assinatura_ativa: true, data_fim: ativas[0].data_fim });
     }
 
-    // Gerar PIX transparente
     const response = await axios.post(
       'https://api.mercadopago.com/v1/payments',
       {
-        transaction_amount: 9.90,
-        description: 'Assinatura Play Stream Premium - 30 dias',
+        transaction_amount: valor,
+        description: descricao,
         payment_method_id: 'pix',
         payer: {
           email: usuario.email,
@@ -32,6 +38,8 @@ router.post('/iniciar', autenticar, async (req, res) => {
         },
         metadata: {
           usuario_id: String(usuarioId),
+          plano,
+          dias: String(dias),
         },
         notification_url: `${process.env.BACKEND_URL}/api/assinaturas/webhook`,
       },
@@ -39,7 +47,7 @@ router.post('/iniciar', autenticar, async (req, res) => {
         headers: {
           Authorization: `Bearer ${MP_ACCESS_TOKEN}`,
           'Content-Type': 'application/json',
-          'X-Idempotency-Key': `${usuarioId}-${Date.now()}`,
+          'X-Idempotency-Key': `${usuarioId}-${plano}-${Date.now()}`,
         },
       }
     );
@@ -51,17 +59,11 @@ router.post('/iniciar', autenticar, async (req, res) => {
 
     await pool.query(
       `INSERT INTO assinaturas (usuario_id, txid, pix_copia_cola, status, valor)
-       VALUES ($1, $2, $3, 'pendente', 9.90)
-       ON CONFLICT DO NOTHING`,
-      [usuarioId, txid, pixCopiaECola]
+       VALUES ($1, $2, $3, 'pendente', $4)`,
+      [usuarioId, txid, pixCopiaECola, valor]
     );
 
-    res.json({
-      txid,
-      pix_copia_cola: pixCopiaECola,
-      qr_code_base64: qrCodeBase64,
-      valor: 9.90,
-    });
+    res.json({ txid, pix_copia_cola: pixCopiaECola, qr_code_base64: qrCodeBase64, valor, plano, dias });
   } catch (err) {
     console.error('Erro MP PIX:', err.response?.data || err.message);
     res.status(500).json({ error: 'Erro ao gerar PIX' });
@@ -100,10 +102,11 @@ router.post('/webhook', async (req, res) => {
       if (p.status === 'approved') {
         const usuarioId = p.metadata?.usuario_id;
         const txid = String(p.id);
+        const dias = parseInt(p.metadata?.dias || '30', 10);
 
         const dataInicio = new Date();
         const dataFim = new Date();
-        dataFim.setDate(dataFim.getDate() + 30);
+        dataFim.setDate(dataFim.getDate() + dias);
 
         if (usuarioId) {
           await pool.query(

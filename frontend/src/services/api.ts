@@ -57,7 +57,7 @@ export const pagamentosAPI = {
 
 // ASSINATURAS
 export const assinaturasAPI = {
-  iniciar: () => api.post('/assinaturas/iniciar'),
+  iniciar: (plano: string = 'mensal') => api.post('/assinaturas/iniciar', { plano }),
   status: () => api.get('/assinaturas/status'),
 };
 
