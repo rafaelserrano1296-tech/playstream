@@ -5,7 +5,7 @@ const pool = require('../config/db');
 const emailService = require('../services/emailService');
 
 const gerarToken = (id) =>
-  jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
+  jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '365d' });
 
 const cadastrar = async (req, res) => {
   const { nome, email, senha } = req.body;
