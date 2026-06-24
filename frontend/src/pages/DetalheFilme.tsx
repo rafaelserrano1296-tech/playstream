@@ -40,6 +40,7 @@ export default function DetalheFilme() {
           setAcesso({ acesso: res.data.gratuito, motivo: res.data.gratuito ? 'gratuito' : 'login_necessario' });
         }
 
+
         // Salvar último filme assistido
         localStorage.setItem('ps_historico', JSON.stringify([id]));
       } catch {

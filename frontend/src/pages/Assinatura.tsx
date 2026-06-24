@@ -36,7 +36,6 @@ export default function Assinatura() {
   const [verificando, setVerificando] = useState(false);
 
   useEffect(() => {
-    if (!autenticado) { navigate('/login'); return; }
     if (assinaturaAtivaCtx) setAssinaturaAtiva(true);
     assinaturasAPI.status().then((res) => {
       if (res.data.ativa) {
@@ -47,6 +46,10 @@ export default function Assinatura() {
   }, [autenticado, assinaturaAtivaCtx]);
 
   const iniciarAssinatura = async () => {
+    if (!autenticado) {
+      navigate('/login');
+      return;
+    }
     setLoading(true);
     try {
       const res = await assinaturasAPI.iniciar(planoSelecionado);

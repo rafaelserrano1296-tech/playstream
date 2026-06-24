@@ -49,19 +49,19 @@ export default function App() {
         <Route path="/cadastro" element={<Cadastro />} />
         <Route path="/recuperar-senha" element={<RecuperarSenha />} />
         <Route path="/reset-senha" element={<ResetSenha />} />
-        <Route path="/" element={<RotaPrivada><Home /></RotaPrivada>} />
-        <Route path="/busca" element={<RotaPrivada><Busca /></RotaPrivada>} />
-        <Route path="/filme/:id" element={<RotaPrivada><DetalheFilme /></RotaPrivada>} />
+        <Route path="/" element={<Home />} />
+        <Route path="/busca" element={<Busca />} />
+        <Route path="/filme/:id" element={<DetalheFilme />} />
         <Route path="/minhas-compras" element={<RotaPrivada><MinhasCompras /></RotaPrivada>} />
         <Route path="/perfil" element={<RotaPrivada><Perfil /></RotaPrivada>} />
-        <Route path="/assinar" element={<RotaPrivada><Assinatura /></RotaPrivada>} />
+        <Route path="/assinar" element={<Assinatura />} />
         <Route path="/admin" element={<RotaAdmin><AdminLayout /></RotaAdmin>}>
           <Route index element={<AdminDashboard />} />
           <Route path="filmes" element={<AdminFilmes />} />
           <Route path="usuarios" element={<AdminUsuarios />} />
           <Route path="pagamentos" element={<AdminPagamentos />} />
         </Route>
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
   );

@@ -12,15 +12,18 @@ interface Props {
 const PLACEHOLDER = 'https://via.placeholder.com/300x450/1a1a1a/555?text=Sem+Capa';
 
 export default function FilmeCard({ filme, forcePremium }: Props) {
-  const { assinaturaAtiva } = useAuth();
+  const { assinaturaAtiva, autenticado } = useAuth();
   const navigate = useNavigate();
   const isPremium = forcePremium || !filme.gratuito;
   const bloqueado = isPremium && !assinaturaAtiva;
-
   const handleClick = (e: React.MouseEvent) => {
     if (bloqueado) {
       e.preventDefault();
-      navigate('/assinar');
+      if (!autenticado) {
+        navigate('/login');
+      } else {
+        navigate('/assinar');
+      }
     }
   };
 
