@@ -79,7 +79,7 @@ export default function Home() {
       try {
         const [destRes, todosRes] = await Promise.all([
           filmesAPI.listar({ destaque: true, limit: 5 }),
-          filmesAPI.listar({ limit: 100 }),
+          filmesAPI.listar({ limit: 200 }),
         ]);
         const todosFilmes: Filme[] = todosRes.data.filmes || [];
         setDestaques(destRes.data.filmes || []);
@@ -113,7 +113,7 @@ export default function Home() {
 
   const gratis = todos.filter((f) => f.gratuito);
   const premium = todos.filter((f) => !f.gratuito);
-  const recemAdicionados = [...todos].reverse().slice(0, 15);
+  const recemAdicionados = todos.slice(0, 15);
   const bannerAtual = destaques[bannerIdx];
 
   if (loading) return <Loading fullScreen />;
